@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Research, Capstone & Teaching</title>
+  <style>
+    /* ---- EDIT COLORS HERE ---- */
+    :root {
+      --bg: #f5f7fa;
+      --text: #1d2733;
+      --main: #1f4e79;      /* top-level dropdown color */
+      --sub: #e3edf7;       /* major dropdown color */
+      --line: #c9d4e0;
+    }
+
+    body {
+      font-family: Georgia, "Times New Roman", serif;
+      background: var(--bg);
+      color: var(--text);
+      max-width: 720px;
+      margin: 40px auto;
+      padding: 0 16px;
+      line-height: 1.5;
+    }
+
+    h1 { margin-bottom: 24px; }
+
+    /* Top-level dropdowns */
+    details.section {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      margin-bottom: 14px;
+      background: #fff;
+    }
+    details.section > summary {
+      background: var(--main);
+      color: #fff;
+      padding: 12px 16px;
+      font-size: 1.15rem;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    details.section[open] > summary { border-radius: 5px 5px 0 0; }
+    .content { padding: 12px 16px; }
+
+    /* Major dropdowns inside Research/Capstone */
+    details.major {
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
+    details.major > summary {
+      background: var(--sub);
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+    details.major ul { margin: 10px 0; }
+
+    summary:focus-visible { outline: 3px solid #f0a500; }
+  </style>
+</head>
+<body>
+
+  <h1>Research, Capstone & Teaching</h1>
+
+  <!-- ================= RESEARCH / CAPSTONE ================= -->
+  <details class="section">
+    <summary>Research / Capstone</summary>
+    <div class="content">
+
+      <!-- To add a major: copy one <details class="major"> block and edit it -->
+      <details class="major">
+        <summary>Cybersecurity</summary>
+        <ul>
+          <li>Project title one</li>
+          <li>Project title two</li>
+        </ul>
+      </details>
+
+      <details class="major">
+        <summary>Computer Science</summary>
+        <ul>
+          <li>Project title one</li>
+          <li>Project title two</li>
+        </ul>
+      </details>
+
+      <details class="major">
+        <summary>Information Technology</summary>
+        <ul>
+          <li>Project title one</li>
+        </ul>
+      </details>
+
+      <details class="major">
+        <summary>Data Science</summary>
+        <ul>
+          <li>Project title one</li>
+        </ul>
+      </details>
+
+    </div>
+  </details>
+
+  <!-- ================= TEACHING ASSISTANT ================= -->
+  <details class="section">
+    <summary>Teaching Assistant</summary>
+    <div class="content">
+      <ul>
+        <li>Course name – Semester</li>
+        <li>Course name – Semester</li>
+      </ul>
+    </div>
+  </details>
+
+</body>
+</html>
