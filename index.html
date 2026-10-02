@@ -100,13 +100,13 @@
     /* Search and filters */
     .filters {
       display: flex; flex-wrap: wrap; gap: 8px;
-      background: #fff; border: 1px solid var(--line); border-radius: 6px;
-      padding: 12px 16px; margin-bottom: 14px;
+      background: var(--bg); border: 1px solid var(--line); border-radius: 6px;
+      padding: 10px 12px; margin-bottom: 12px;
     }
     .filters input, .filters select, .filters button { font: inherit; font-size: 0.95rem; padding: 6px 8px; }
     .filters input { flex: 1 1 100%; }
     .filters button { cursor: pointer; }
-    #f-result { flex: 1 1 100%; margin: 0; font-size: 0.9rem; color: #4a5a6a; }
+    .f-result { flex: 1 1 100%; margin: 0; font-size: 0.9rem; color: #4a5a6a; }
     .hide { display: none !important; }
     .meta { font-size: 0.85rem; color: #4a5a6a; font-weight: normal; }
     li.project .meta { margin: 0 0 2px 0; }
@@ -191,21 +191,24 @@
   </details>
 
   <!-- ================= SEARCH & FILTERS ================= -->
-  <!-- Filters read the data-professor, data-format and data-time values on each course. -->
-  <div class="filters">
-    <input type="search" id="f-search" placeholder="Search by course or project name" aria-label="Search by name">
-    <select id="f-professor" aria-label="Filter by professor"><option value="">Any professor</option></select>
-    <select id="f-department" aria-label="Filter by department"><option value="">Any department</option></select>
-    <select id="f-format" aria-label="Filter by format"><option value="">Any format</option></select>
-    <select id="f-time" aria-label="Filter by time of day">
-      <option value="">Any time</option>
-      <option>Morning</option>
-      <option>Afternoon</option>
-      <option>Evening</option>
-    </select>
-    <button id="f-clear" type="button">Clear</button>
-    <p id="f-result" aria-live="polite"></p>
-  </div>
+  <!-- This one filter bar is copied to the top of the Research section and the Teaching Assistant section. -->
+  <!-- Filters read the data-professor, data-department, data-format and data-time values on each course. -->
+  <template id="filter-template">
+    <div class="filters">
+      <input type="search" class="f-search" placeholder="Search by name, professor, or department" aria-label="Search by name">
+      <select class="f-professor" aria-label="Filter by professor"><option value="">Any professor</option></select>
+      <select class="f-department" aria-label="Filter by department"><option value="">Any department</option></select>
+      <select class="f-format" aria-label="Filter by format"><option value="">Any format</option></select>
+      <select class="f-time" aria-label="Filter by time of day">
+        <option value="">Any time</option>
+        <option>Morning</option>
+        <option>Afternoon</option>
+        <option>Evening</option>
+      </select>
+      <button class="f-clear" type="button">Clear</button>
+      <p class="f-result" aria-live="polite"></p>
+    </div>
+  </template>
 
   <!-- ================= RESEARCH ================= -->
   <details class="section" data-category="research">
@@ -499,16 +502,11 @@
       topicMsg.textContent = "";
     };
 
-    // ---------- Search and filters ----------
-    const items = document.querySelectorAll("li[data-professor]");
-    const fSearch = document.getElementById("f-search");
-    const fProf = document.getElementById("f-professor");
-    const fDept = document.getElementById("f-department");
-    const fFormat = document.getElementById("f-format");
-    const fTime = document.getElementById("f-time");
+    // ---------- Search and filters (one bar in Research, one in Teaching Assistant) ----------
+    const filterTemplate = document.getElementById("filter-template");
 
-    // Show professor | format | schedule under each title
-    items.forEach(li => {
+    // Show professor | department | format | schedule under each title
+    document.querySelectorAll("li[data-professor]").forEach(li => {
       const isProject = li.classList.contains("project");
       const meta = document.createElement(isProject ? "div" : "span");
       meta.className = "meta";
@@ -516,49 +514,64 @@
       if (isProject) li.querySelector(".row").after(meta); else li.append(meta);
     });
 
-    // Fill the professor and format dropdowns from the course data
-    function fillSelect(select, attr) {
-      [...new Set([...items].map(li => li.dataset[attr]))].sort()
-        .forEach(v => select.add(new Option(v, v)));
+    function setupFilters(section) {
+      const items = section.querySelectorAll("li[data-professor]");
+      const bar = filterTemplate.content.firstElementChild.cloneNode(true);
+      section.querySelector(".count").after(bar);
+
+      const fSearch = bar.querySelector(".f-search");
+      const fProf = bar.querySelector(".f-professor");
+      const fDept = bar.querySelector(".f-department");
+      const fFormat = bar.querySelector(".f-format");
+      const fTime = bar.querySelector(".f-time");
+      const result = bar.querySelector(".f-result");
+
+      // Fill the dropdowns from this section's course data
+      function fillSelect(select, attr) {
+        [...new Set([...items].map(li => li.dataset[attr]))].sort()
+          .forEach(v => select.add(new Option(v, v)));
+      }
+      fillSelect(fProf, "professor");
+      fillSelect(fDept, "department");
+      fillSelect(fFormat, "format");
+
+      function applyFilters() {
+        const text = fSearch.value.trim().toLowerCase();
+        const active = text || fProf.value || fDept.value || fFormat.value || fTime.value;
+        let shown = 0;
+
+        items.forEach(li => {
+          const title = li.querySelector(".pick").textContent.toLowerCase();
+          const ok =
+            (!text || title.includes(text) || li.dataset.professor.toLowerCase().includes(text) || li.dataset.department.toLowerCase().includes(text)) &&
+            (!fProf.value || li.dataset.professor === fProf.value) &&
+            (!fDept.value || li.dataset.department === fDept.value) &&
+            (!fFormat.value || li.dataset.format === fFormat.value) &&
+            (!fTime.value || li.dataset.time === fTime.value);
+          li.classList.toggle("hide", !ok);
+          if (ok) shown++;
+        });
+
+        // Hide majors with no matches; open the ones that have matches
+        section.querySelectorAll("details.major").forEach(d => {
+          const any = d.querySelector("li:not(.hide)");
+          d.classList.toggle("hide", !any);
+          if (active && any) d.open = true;
+        });
+
+        result.textContent =
+          active ? (shown === 0 ? "No matches. Try clearing a filter." : shown + " match" + (shown === 1 ? "" : "es")) : "";
+      }
+
+      fSearch.addEventListener("input", applyFilters);
+      [fProf, fDept, fFormat, fTime].forEach(el => el.addEventListener("change", applyFilters));
+      bar.querySelector(".f-clear").onclick = () => {
+        fSearch.value = ""; fProf.value = ""; fDept.value = ""; fFormat.value = ""; fTime.value = "";
+        applyFilters();
+      };
     }
-    fillSelect(fProf, "professor");
-    fillSelect(fDept, "department");
-    fillSelect(fFormat, "format");
 
-    function applyFilters() {
-      const text = fSearch.value.trim().toLowerCase();
-      const active = text || fProf.value || fDept.value || fFormat.value || fTime.value;
-      let shown = 0;
-
-      items.forEach(li => {
-        const title = li.querySelector(".pick").textContent.toLowerCase();
-        const ok =
-          (!text || title.includes(text) || li.dataset.professor.toLowerCase().includes(text) || li.dataset.department.toLowerCase().includes(text)) &&
-          (!fProf.value || li.dataset.professor === fProf.value) &&
-          (!fDept.value || li.dataset.department === fDept.value) &&
-          (!fFormat.value || li.dataset.format === fFormat.value) &&
-          (!fTime.value || li.dataset.time === fTime.value);
-        li.classList.toggle("hide", !ok);
-        if (ok) shown++;
-      });
-
-      // Hide majors and sections with no matches; open the ones that have matches
-      document.querySelectorAll("details.major, details.section[data-category]").forEach(d => {
-        const any = d.querySelector("li:not(.hide)");
-        d.classList.toggle("hide", !any);
-        if (active && any) d.open = true;
-      });
-
-      document.getElementById("f-result").textContent =
-        active ? (shown === 0 ? "No matches. Try clearing a filter." : shown + " match" + (shown === 1 ? "" : "es")) : "";
-    }
-
-    fSearch.addEventListener("input", applyFilters);
-    [fProf, fDept, fFormat, fTime].forEach(el => el.addEventListener("change", applyFilters));
-    document.getElementById("f-clear").onclick = () => {
-      fSearch.value = ""; fProf.value = ""; fDept.value = ""; fFormat.value = ""; fTime.value = "";
-      applyFilters();
-    };
+    document.querySelectorAll("details.section[data-category]").forEach(setupFilters);
 
     render();
   </script>
