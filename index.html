@@ -115,6 +115,9 @@
     .blank { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
     #capstone-topic { flex: 1 1 260px; font: inherit; padding: 6px 8px; border: none; border-bottom: 2px solid var(--main); background: var(--sub); }
     #capstone-save, #capstone-clear { font: inherit; font-size: 0.95rem; padding: 6px 10px; cursor: pointer; }
+    .details label { display: block; margin-bottom: 4px; }
+    .details textarea { width: 100%; box-sizing: border-box; font: inherit; padding: 8px; background: var(--sub); border: 1px solid var(--line); border-radius: 4px; }
+    .hint { font-size: 0.9rem; color: #4a5a6a; margin: 4px 0 12px; }
     #capstone-msg { font-size: 0.9rem; color: #2a7a2a; min-height: 1.2em; }
 
     .field { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; margin: 8px 0; }
@@ -173,8 +176,13 @@
       </p>
 
       <p class="blank">
-        <label for="capstone-topic">I will start researching:</label>
+        <label for="capstone-topic">Research idea:</label>
         <input type="text" id="capstone-topic" placeholder="Type your research idea here">
+      </p>
+      <p class="hint">Describe the question you want to answer or the problem you want to solve, and what you hope to find out. A sentence or two is enough to start.</p>
+      <p class="details">
+        <label for="capstone-details">Specifics:</label>
+        <textarea id="capstone-details" rows="4" placeholder="What exactly will you do? For example: the methods, tools, or data you plan to use, or the questions you want to explore."></textarea>
       </p>
       <button id="capstone-save" type="button">Save capstone</button>
       <button id="capstone-clear" type="button">Clear</button>
@@ -444,6 +452,7 @@
     const deptSelect = document.getElementById("capstone-dept");
     const mentorSelect = document.getElementById("capstone-mentor");
     const topicInput = document.getElementById("capstone-topic");
+    const detailsInput = document.getElementById("capstone-details");
     const topicMsg = document.getElementById("capstone-msg");
 
     // Fill the department dropdown from the mentor list
@@ -466,6 +475,7 @@
         deptSelect.value = dept;
         fillMentors(dept, saved.mentor);
         topicInput.value = saved.topic || "";
+        detailsInput.value = saved.details || "";
         topicMsg.textContent = "Saved. Mentor: " + saved.mentor + " (" + dept + ").";
       }
     } catch (e) {}
@@ -474,14 +484,15 @@
       const topic = topicInput.value.trim();
       if (!deptSelect.value) { topicMsg.textContent = "Choose your department first."; return; }
       if (!mentorSelect.value) { topicMsg.textContent = "Choose a mentor."; return; }
-      if (!topic) { topicMsg.textContent = "Fill in the blank with what you will research."; return; }
+      if (!topic) { topicMsg.textContent = "Enter your research idea."; return; }
       try {
-        localStorage.setItem("capstone", JSON.stringify({ dept: deptSelect.value, mentor: mentorSelect.value, topic: topic }));
+        localStorage.setItem("capstone", JSON.stringify({ dept: deptSelect.value, mentor: mentorSelect.value, topic: topic, details: detailsInput.value.trim() }));
       } catch (e) {}
       topicMsg.textContent = "Saved. Mentor: " + mentorSelect.value + " (" + deptSelect.value + ").";
     };
     document.getElementById("capstone-clear").onclick = () => {
       topicInput.value = "";
+      detailsInput.value = "";
       deptSelect.value = "";
       fillMentors("");
       try { localStorage.removeItem("capstone"); } catch (e) {}
