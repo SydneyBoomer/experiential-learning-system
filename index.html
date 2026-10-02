@@ -57,6 +57,25 @@
     }
     details.major ul { margin: 10px 0; }
 
+
+    /* Capstone checkbox on each project */
+    details.major li {
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 6px 8px;
+      border-radius: 4px;
+    }
+    details.major ul { padding-left: 0; }
+    .flag { font-size: 0.9rem; white-space: nowrap; cursor: pointer; }
+    /* Highlight the row when the box is checked */
+    details.major li:has(input:checked) {
+      background: #fff4cc;
+      font-weight: bold;
+    }
+
     summary:focus-visible { outline: 3px solid #f0a500; }
   </style>
 </head>
@@ -69,34 +88,35 @@
     <summary>Research / Capstone</summary>
     <div class="content">
 
+      <!-- Check the box next to a project if it counts toward your capstone graduation requirement. -->
       <!-- To add a major: copy one <details class="major"> block and edit it -->
       <details class="major">
         <summary>Cybersecurity</summary>
         <ul>
-          <li>Project title one</li>
-          <li>Project title two</li>
+          <li><span>Project title one</span> <label class="flag"><input type="checkbox"> For capstone graduation</label></li>
+          <li><span>Project title two</span> <label class="flag"><input type="checkbox"> For capstone graduation</label></li>
         </ul>
       </details>
 
       <details class="major">
         <summary>Computer Science</summary>
         <ul>
-          <li>Project title one</li>
-          <li>Project title two</li>
+          <li><span>Project title one</span> <label class="flag"><input type="checkbox"> For capstone graduation</label></li>
+          <li><span>Project title two</span> <label class="flag"><input type="checkbox"> For capstone graduation</label></li>
         </ul>
       </details>
 
       <details class="major">
         <summary>Information Technology</summary>
         <ul>
-          <li>Project title one</li>
+          <li><span>Project title one</span> <label class="flag"><input type="checkbox"> For capstone graduation</label></li>
         </ul>
       </details>
 
       <details class="major">
         <summary>Data Science</summary>
         <ul>
-          <li>Project title one</li>
+          <li><span>Project title one</span> <label class="flag"><input type="checkbox"> For capstone graduation</label></li>
         </ul>
       </details>
 
