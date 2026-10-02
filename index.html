@@ -45,7 +45,7 @@
     details.section[open] > summary { border-radius: 5px 5px 0 0; }
     .content { padding: 12px 16px; }
 
-    /* Major dropdowns inside Research/Capstone */
+    /* Major dropdowns inside Research */
     details.major {
       border: 1px solid var(--line);
       border-radius: 4px;
@@ -68,8 +68,14 @@
       padding: 6px 8px;
       border-radius: 4px;
     }
-    .flag { font-size: 0.9rem; white-space: nowrap; cursor: pointer; }
-    li:has(input:checked) { background: var(--waiting); font-weight: bold; }
+
+
+    /* Research rows: title row on top, description dropdown below */
+    li.project { display: block; }
+    li.project .row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    details.desc { margin: 4px 0 2px 0; font-weight: normal; }
+    details.desc > summary { font-size: 0.9rem; color: #4a5a6a; cursor: pointer; }
+    details.desc p { margin: 6px 0 4px 0; font-size: 0.95rem; }
 
     /* Clickable titles */
     .pick {
@@ -84,6 +90,44 @@
     }
     .pick[data-status="waiting"]::after    { content: " (waiting for approval)"; color: #8a6d00; }
     .pick[data-status="registered"]::after { content: " (registered)"; color: #2a7a2a; }
+
+    .info { font-size: 0.85rem; color: #4a5a6a; margin-left: 8px; font-weight: normal; }
+    .info.full { color: #a14a00; }
+
+    .pick:disabled { color: #8a96a3; text-decoration: none; cursor: not-allowed; }
+    .count { font-size: 0.9rem; color: #4a5a6a; margin: 0 0 8px; }
+
+    /* Search and filters */
+    .filters {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      background: #fff; border: 1px solid var(--line); border-radius: 6px;
+      padding: 12px 16px; margin-bottom: 14px;
+    }
+    .filters input, .filters select, .filters button { font: inherit; font-size: 0.95rem; padding: 6px 8px; }
+    .filters input { flex: 1 1 100%; }
+    .filters button { cursor: pointer; }
+    #f-result { flex: 1 1 100%; margin: 0; font-size: 0.9rem; color: #4a5a6a; }
+    .hide { display: none !important; }
+    .meta { font-size: 0.85rem; color: #4a5a6a; font-weight: normal; }
+    li.project .meta { margin: 0 0 2px 0; }
+
+    /* Capstone topic */
+    .blank { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+    #capstone-topic { flex: 1 1 260px; font: inherit; padding: 6px 8px; border: none; border-bottom: 2px solid var(--main); background: var(--sub); }
+    #capstone-save, #capstone-clear { font: inherit; font-size: 0.95rem; padding: 6px 10px; cursor: pointer; }
+    #capstone-msg { font-size: 0.9rem; color: #2a7a2a; min-height: 1.2em; }
+
+    .field { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; margin: 8px 0; }
+    .field select { font: inherit; padding: 6px 8px; min-width: 220px; }
+
+    /* Application pop-up */
+    dialog { width: 90%; max-width: 520px; border: 1px solid var(--line); border-radius: 6px; padding: 16px 20px; font-family: inherit; color: var(--text); }
+    dialog::backdrop { background: rgba(0, 0, 0, 0.4); }
+    dialog h3 { margin: 0 0 8px; }
+    dialog textarea { width: 100%; box-sizing: border-box; font: inherit; padding: 8px; }
+    dialog button { font: inherit; font-size: 0.95rem; padding: 6px 12px; cursor: pointer; }
+    .warn { color: #a14a00; font-size: 0.9rem; min-height: 1.2em; margin: 6px 0; }
+    .reason { font-size: 0.85rem; color: #4a5a6a; font-weight: normal; margin-top: 2px; }
 
     /* My Courses status section */
     .status-title { margin: 6px 0; font-size: 1rem; }
@@ -111,63 +155,167 @@
     </div>
   </details>
 
-  <!-- ================= RESEARCH / CAPSTONE ================= -->
-  <details class="section">
-    <summary>Research / Capstone</summary>
+  <!-- ================= CAPSTONE ================= -->
+  <details class="section" open>
+    <summary>Capstone</summary>
     <div class="content">
-      <!-- Click a title to join the waiting list. Check the box if it counts toward your capstone. -->
+      <p>You choose your own capstone project, get a mentor, and research the topic yourself. Go to your mentor when you get stuck.</p>
+
+      <!-- Pick your department first; the mentor dropdown then lists professors in that department. -->
+      <!-- To add a mentor, edit the MENTORS list in the script at the bottom of this file. -->
+      <p class="field">
+        <label for="capstone-dept">My department:</label>
+        <select id="capstone-dept"><option value="">Choose a department</option></select>
+      </p>
+      <p class="field">
+        <label for="capstone-mentor">My mentor:</label>
+        <select id="capstone-mentor" disabled><option value="">Choose a department first</option></select>
+      </p>
+
+      <p class="blank">
+        <label for="capstone-topic">I will start researching:</label>
+        <input type="text" id="capstone-topic" placeholder="Type your research idea here">
+      </p>
+      <button id="capstone-save" type="button">Save capstone</button>
+      <button id="capstone-clear" type="button">Clear</button>
+      <p id="capstone-msg" aria-live="polite"></p>
+    </div>
+  </details>
+
+  <!-- ================= SEARCH & FILTERS ================= -->
+  <!-- Filters read the data-professor, data-format and data-time values on each course. -->
+  <div class="filters">
+    <input type="search" id="f-search" placeholder="Search by course or project name" aria-label="Search by name">
+    <select id="f-professor" aria-label="Filter by professor"><option value="">Any professor</option></select>
+    <select id="f-department" aria-label="Filter by department"><option value="">Any department</option></select>
+    <select id="f-format" aria-label="Filter by format"><option value="">Any format</option></select>
+    <select id="f-time" aria-label="Filter by time of day">
+      <option value="">Any time</option>
+      <option>Morning</option>
+      <option>Afternoon</option>
+      <option>Evening</option>
+    </select>
+    <button id="f-clear" type="button">Clear</button>
+    <p id="f-result" aria-live="polite"></p>
+  </div>
+
+  <!-- ================= RESEARCH ================= -->
+  <details class="section" data-category="research">
+    <summary>Research</summary>
+    <div class="content">
+      <p class="count" id="count-research"></p>
+      <!-- Edit data-spots (places the professor allows) and data-applied (students already applied) on each <li class="project"). -->
+      <!-- Edit each <p> under 'Description' to describe the project. -->
+      <!-- Click a title to apply: the student types why they want it, then joins the waiting list. -->
       <!-- To add a major: copy one <details class="major"> block and edit it -->
 
       <details class="major">
         <summary>Cybersecurity</summary>
         <ul>
-          <li><button class="pick">Cybersecurity Project One</button> <label class="flag"><input type="checkbox"> For capstone graduation</label></li>
-          <li><button class="pick">Cybersecurity Project Two</button> <label class="flag"><input type="checkbox"> For capstone graduation</label></li>
+          <li class="project" data-spots="2" data-applied="1" data-professor="Dr. Alvarez" data-department="Computer Science" data-format="Online" data-time="Morning" data-schedule="Mon/Wed 9:00 AM">
+            <div class="row"><span><button class="pick">Cybersecurity Project One</button> <span class="info"></span></span></div>
+            <details class="desc">
+              <summary>Description</summary>
+              <p>Describe this project here: goals, tools used, and what you will deliver.</p>
+            </details>
+          </li>
+          <li class="project" data-spots="3" data-applied="3" data-professor="Dr. Chen" data-department="Cybersecurity" data-format="In person" data-time="Afternoon" data-schedule="Tue/Thu 2:00 PM">
+            <div class="row"><span><button class="pick">Cybersecurity Project Two</button> <span class="info"></span></span></div>
+            <details class="desc">
+              <summary>Description</summary>
+              <p>Describe this project here: goals, tools used, and what you will deliver.</p>
+            </details>
+          </li>
         </ul>
       </details>
 
       <details class="major">
         <summary>Computer Science</summary>
         <ul>
-          <li><button class="pick">Computer Science Project One</button> <label class="flag"><input type="checkbox"> For capstone graduation</label></li>
-          <li><button class="pick">Computer Science Project Two</button> <label class="flag"><input type="checkbox"> For capstone graduation</label></li>
+          <li class="project" data-spots="1" data-applied="0" data-professor="Dr. Alvarez" data-department="Computer Science" data-format="Hybrid" data-time="Afternoon" data-schedule="Fri 1:00 PM">
+            <div class="row"><span><button class="pick">Computer Science Project One</button> <span class="info"></span></span></div>
+            <details class="desc">
+              <summary>Description</summary>
+              <p>Describe this project here: goals, tools used, and what you will deliver.</p>
+            </details>
+          </li>
+          <li class="project" data-spots="4" data-applied="2" data-professor="Dr. Patel" data-department="Data Science" data-format="Online" data-time="Evening" data-schedule="Mon 6:00 PM">
+            <div class="row"><span><button class="pick">Computer Science Project Two</button> <span class="info"></span></span></div>
+            <details class="desc">
+              <summary>Description</summary>
+              <p>Describe this project here: goals, tools used, and what you will deliver.</p>
+            </details>
+          </li>
         </ul>
       </details>
 
       <details class="major">
         <summary>Information Technology</summary>
         <ul>
-          <li><button class="pick">IT Project One</button> <label class="flag"><input type="checkbox"> For capstone graduation</label></li>
+          <li class="project" data-spots="2" data-applied="2" data-professor="Dr. Okafor" data-department="Information Technology" data-format="In person" data-time="Morning" data-schedule="Wed 10:00 AM">
+            <div class="row"><span><button class="pick">IT Project One</button> <span class="info"></span></span></div>
+            <details class="desc">
+              <summary>Description</summary>
+              <p>Describe this project here: goals, tools used, and what you will deliver.</p>
+            </details>
+          </li>
         </ul>
       </details>
 
       <details class="major">
         <summary>Data Science</summary>
         <ul>
-          <li><button class="pick">Data Science Project One</button> <label class="flag"><input type="checkbox"> For capstone graduation</label></li>
+          <li class="project" data-spots="3" data-applied="1" data-professor="Dr. Patel" data-department="Data Science" data-format="Online" data-time="Morning" data-schedule="Tue/Thu 9:30 AM">
+            <div class="row"><span><button class="pick">Data Science Project One</button> <span class="info"></span></span></div>
+            <details class="desc">
+              <summary>Description</summary>
+              <p>Describe this project here: goals, tools used, and what you will deliver.</p>
+            </details>
+          </li>
         </ul>
       </details>
     </div>
   </details>
 
   <!-- ================= TEACHING ASSISTANT ================= -->
-  <details class="section">
+  <details class="section" data-category="ta">
     <summary>Teaching Assistant</summary>
     <div class="content">
+      <p class="count" id="count-ta"></p>
       <ul>
-        <li><button class="pick">TA: Course One (Fall)</button></li>
-        <li><button class="pick">TA: Course Two (Spring)</button></li>
+        <li data-professor="Dr. Alvarez" data-department="Computer Science" data-format="In person" data-time="Morning" data-schedule="Mon/Wed 10:00 AM"><button class="pick">TA: Course One (Fall)</button></li>
+        <li data-professor="Dr. Chen" data-department="Cybersecurity" data-format="Online" data-time="Evening" data-schedule="Tue 6:30 PM"><button class="pick">TA: Course Two (Spring)</button></li>
       </ul>
     </div>
   </details>
 
+  <!-- Pop-up shown when a student clicks a research project -->
+  <dialog id="apply-dialog">
+    <h3 id="apply-title"></h3>
+    <p>Why do you want this opportunity?</p>
+    <textarea id="apply-reason" rows="5" aria-label="Why do you want this opportunity?" placeholder="Tell the professor why you are interested."></textarea>
+    <p id="apply-msg" class="warn" aria-live="polite"></p>
+    <button id="apply-submit" type="button">Submit application</button>
+    <button id="apply-cancel" type="button">Cancel</button>
+  </dialog>
+
   <script>
     // Each title is stored as: { "Title": "waiting" } or { "Title": "registered" }
+    // ---- EDIT LIMITS HERE: max selections (waiting + registered) per category ----
+    const MAX = { research: 3, ta: 3 };
+    
     let status = {};
     try { status = JSON.parse(localStorage.getItem("courseStatus")) || {}; } catch (e) {}
 
+    // Why the student wants each research project: { "Title": "their answer" }
+    let reasons = {};
+    try { reasons = JSON.parse(localStorage.getItem("courseReasons")) || {}; } catch (e) {}
+
     function save() {
-      try { localStorage.setItem("courseStatus", JSON.stringify(status)); } catch (e) {}
+      try {
+        localStorage.setItem("courseStatus", JSON.stringify(status));
+        localStorage.setItem("courseReasons", JSON.stringify(reasons));
+      } catch (e) {}
     }
 
     // Build one row in the My Courses lists
@@ -175,6 +323,12 @@
       const li = document.createElement("li");
       const name = document.createElement("span");
       name.textContent = title;
+      if (reasons[title]) {
+        const why = document.createElement("div");
+        why.className = "reason";
+        why.textContent = "Why: " + reasons[title];
+        name.appendChild(why);
+      }
       const actions = document.createElement("span");
       actions.className = "actions";
 
@@ -186,7 +340,7 @@
       }
       const remove = document.createElement("button");
       remove.textContent = "Remove";
-      remove.onclick = () => { delete status[title]; save(); render(); };
+      remove.onclick = () => { delete status[title]; delete reasons[title]; save(); render(); };
       actions.appendChild(remove);
 
       li.append(name, actions);
@@ -211,15 +365,189 @@
         const s = status[btn.textContent.trim()];
         if (s) btn.dataset.status = s; else delete btn.dataset.status;
       });
+      // Show spots and applicants beside each research project (your own application counts as +1)
+      document.querySelectorAll("li.project").forEach(li => {
+        const title = li.querySelector(".pick").textContent.trim();
+        const spots = Number(li.dataset.spots);
+        const applied = Number(li.dataset.applied) + (status[title] ? 1 : 0);
+        const info = li.querySelector(".info");
+        info.textContent = "Spots: " + spots + " | Applied: " + applied + (applied >= spots ? " (full)" : "");
+        info.classList.toggle("full", applied >= spots);
+      });
+      // Update counters and lock unselected titles once a category is full
+      Object.keys(MAX).forEach(cat => {
+        const used = countUsed(cat);
+        const full = used >= MAX[cat];
+        document.getElementById("count-" + cat).textContent =
+          "Selected " + used + " of " + MAX[cat] + (full ? " (limit reached: remove one to pick another)" : "");
+        document.querySelectorAll('[data-category="' + cat + '"] .pick').forEach(btn => {
+          btn.disabled = full && !status[btn.textContent.trim()];
+        });
+      });
     }
 
-    // Clicking a title puts it on the waiting list (if it isn't listed already)
+    // How many titles in a category are on the waiting or registered list
+    function countUsed(cat) {
+      let n = 0;
+      document.querySelectorAll('[data-category="' + cat + '"] .pick').forEach(btn => {
+        if (status[btn.textContent.trim()]) n++;
+      });
+      return n;
+    }
+
+    // Research projects ask "why do you want this opportunity?" before the application is submitted
+    const applyDialog = document.getElementById("apply-dialog");
+    const applyReason = document.getElementById("apply-reason");
+    const applyMsg = document.getElementById("apply-msg");
+    let pendingTitle = "";
+
+    function openApply(title) {
+      pendingTitle = title;
+      document.getElementById("apply-title").textContent = title;
+      applyReason.value = "";
+      applyMsg.textContent = "";
+      applyDialog.showModal();
+    }
+    document.getElementById("apply-submit").onclick = () => {
+      const why = applyReason.value.trim();
+      if (!why) { applyMsg.textContent = "Tell the professor why you want this opportunity."; return; }
+      status[pendingTitle] = "waiting";
+      reasons[pendingTitle] = why;
+      save(); render();
+      applyDialog.close();
+    };
+    document.getElementById("apply-cancel").onclick = () => applyDialog.close();
+
+    // Clicking a research title opens the pop-up; clicking a TA course joins the waiting list directly
     document.querySelectorAll(".pick").forEach(btn => {
       btn.onclick = () => {
         const title = btn.textContent.trim();
-        if (!status[title]) { status[title] = "waiting"; save(); render(); }
+        const cat = btn.closest("[data-category]").dataset.category;
+        if (status[title] || countUsed(cat) >= MAX[cat]) return;
+        if (cat === "research") {
+          openApply(title);
+        } else {
+          status[title] = "waiting"; save(); render();
+        }
       };
     });
+
+    // ---------- Capstone: department, then mentor, then fill in the blank ----------
+    // ---- EDIT MENTORS HERE: one line per professor ----
+    const MENTORS = [
+      { name: "Dr. Alvarez", dept: "Computer Science" },
+      { name: "Dr. Chen",    dept: "Cybersecurity" },
+      { name: "Dr. Okafor",  dept: "Information Technology" },
+      { name: "Dr. Patel",   dept: "Data Science" },
+    ];
+
+    const deptSelect = document.getElementById("capstone-dept");
+    const mentorSelect = document.getElementById("capstone-mentor");
+    const topicInput = document.getElementById("capstone-topic");
+    const topicMsg = document.getElementById("capstone-msg");
+
+    // Fill the department dropdown from the mentor list
+    [...new Set(MENTORS.map(m => m.dept))].sort().forEach(d => deptSelect.add(new Option(d, d)));
+
+    // Show only the mentors in the chosen department
+    function fillMentors(dept, selected) {
+      mentorSelect.length = 1;
+      mentorSelect.options[0].text = dept ? "Choose a mentor" : "Choose a department first";
+      MENTORS.filter(m => m.dept === dept).forEach(m => mentorSelect.add(new Option(m.name, m.name)));
+      mentorSelect.disabled = !dept;
+      mentorSelect.value = selected || "";
+    }
+    deptSelect.onchange = () => fillMentors(deptSelect.value);
+
+    try {
+      const saved = JSON.parse(localStorage.getItem("capstone"));
+      if (saved) {
+        const dept = saved.dept || (MENTORS.find(m => m.name === saved.mentor) || {}).dept || "";
+        deptSelect.value = dept;
+        fillMentors(dept, saved.mentor);
+        topicInput.value = saved.topic || "";
+        topicMsg.textContent = "Saved. Mentor: " + saved.mentor + " (" + dept + ").";
+      }
+    } catch (e) {}
+
+    document.getElementById("capstone-save").onclick = () => {
+      const topic = topicInput.value.trim();
+      if (!deptSelect.value) { topicMsg.textContent = "Choose your department first."; return; }
+      if (!mentorSelect.value) { topicMsg.textContent = "Choose a mentor."; return; }
+      if (!topic) { topicMsg.textContent = "Fill in the blank with what you will research."; return; }
+      try {
+        localStorage.setItem("capstone", JSON.stringify({ dept: deptSelect.value, mentor: mentorSelect.value, topic: topic }));
+      } catch (e) {}
+      topicMsg.textContent = "Saved. Mentor: " + mentorSelect.value + " (" + deptSelect.value + ").";
+    };
+    document.getElementById("capstone-clear").onclick = () => {
+      topicInput.value = "";
+      deptSelect.value = "";
+      fillMentors("");
+      try { localStorage.removeItem("capstone"); } catch (e) {}
+      topicMsg.textContent = "";
+    };
+
+    // ---------- Search and filters ----------
+    const items = document.querySelectorAll("li[data-professor]");
+    const fSearch = document.getElementById("f-search");
+    const fProf = document.getElementById("f-professor");
+    const fDept = document.getElementById("f-department");
+    const fFormat = document.getElementById("f-format");
+    const fTime = document.getElementById("f-time");
+
+    // Show professor | format | schedule under each title
+    items.forEach(li => {
+      const isProject = li.classList.contains("project");
+      const meta = document.createElement(isProject ? "div" : "span");
+      meta.className = "meta";
+      meta.textContent = li.dataset.professor + " | " + li.dataset.department + " | " + li.dataset.format + " | " + li.dataset.schedule;
+      if (isProject) li.querySelector(".row").after(meta); else li.append(meta);
+    });
+
+    // Fill the professor and format dropdowns from the course data
+    function fillSelect(select, attr) {
+      [...new Set([...items].map(li => li.dataset[attr]))].sort()
+        .forEach(v => select.add(new Option(v, v)));
+    }
+    fillSelect(fProf, "professor");
+    fillSelect(fDept, "department");
+    fillSelect(fFormat, "format");
+
+    function applyFilters() {
+      const text = fSearch.value.trim().toLowerCase();
+      const active = text || fProf.value || fDept.value || fFormat.value || fTime.value;
+      let shown = 0;
+
+      items.forEach(li => {
+        const title = li.querySelector(".pick").textContent.toLowerCase();
+        const ok =
+          (!text || title.includes(text) || li.dataset.professor.toLowerCase().includes(text) || li.dataset.department.toLowerCase().includes(text)) &&
+          (!fProf.value || li.dataset.professor === fProf.value) &&
+          (!fDept.value || li.dataset.department === fDept.value) &&
+          (!fFormat.value || li.dataset.format === fFormat.value) &&
+          (!fTime.value || li.dataset.time === fTime.value);
+        li.classList.toggle("hide", !ok);
+        if (ok) shown++;
+      });
+
+      // Hide majors and sections with no matches; open the ones that have matches
+      document.querySelectorAll("details.major, details.section[data-category]").forEach(d => {
+        const any = d.querySelector("li:not(.hide)");
+        d.classList.toggle("hide", !any);
+        if (active && any) d.open = true;
+      });
+
+      document.getElementById("f-result").textContent =
+        active ? (shown === 0 ? "No matches. Try clearing a filter." : shown + " match" + (shown === 1 ? "" : "es")) : "";
+    }
+
+    fSearch.addEventListener("input", applyFilters);
+    [fProf, fDept, fFormat, fTime].forEach(el => el.addEventListener("change", applyFilters));
+    document.getElementById("f-clear").onclick = () => {
+      fSearch.value = ""; fProf.value = ""; fDept.value = ""; fFormat.value = ""; fTime.value = "";
+      applyFilters();
+    };
 
     render();
   </script>
