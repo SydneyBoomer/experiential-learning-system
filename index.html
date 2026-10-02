@@ -12,6 +12,8 @@
       --main: #1f4e79;      /* top-level dropdown color */
       --sub: #e3edf7;       /* major dropdown color */
       --line: #c9d4e0;
+      --waiting: #fff4cc;   /* waiting-for-approval color */
+      --registered: #dcf2dc;/* registered color */
     }
 
     body {
@@ -23,7 +25,6 @@
       padding: 0 16px;
       line-height: 1.5;
     }
-
     h1 { margin-bottom: 24px; }
 
     /* Top-level dropdowns */
@@ -55,11 +56,10 @@
       padding: 8px 12px;
       cursor: pointer;
     }
-    details.major ul { margin: 10px 0; }
 
-
-    /* Capstone checkbox on each project */
-    details.major li {
+    /* Project / course rows */
+    ul { padding-left: 0; margin: 10px 0; }
+    li {
       list-style: none;
       display: flex;
       justify-content: space-between;
@@ -68,58 +68,85 @@
       padding: 6px 8px;
       border-radius: 4px;
     }
-    details.major ul { padding-left: 0; }
     .flag { font-size: 0.9rem; white-space: nowrap; cursor: pointer; }
-    /* Highlight the row when the box is checked */
-    details.major li:has(input:checked) {
-      background: #fff4cc;
-      font-weight: bold;
-    }
+    li:has(input:checked) { background: var(--waiting); font-weight: bold; }
 
-    summary:focus-visible { outline: 3px solid #f0a500; }
+    /* Clickable titles */
+    .pick {
+      font: inherit;
+      color: var(--main);
+      background: none;
+      border: none;
+      padding: 0;
+      text-align: left;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    .pick[data-status="waiting"]::after    { content: " (waiting for approval)"; color: #8a6d00; }
+    .pick[data-status="registered"]::after { content: " (registered)"; color: #2a7a2a; }
+
+    /* My Courses status section */
+    .status-title { margin: 6px 0; font-size: 1rem; }
+    #waiting-list li    { background: var(--waiting); }
+    #registered-list li { background: var(--registered); }
+    .empty { color: #6b7785; font-style: italic; padding: 4px 8px; }
+    .actions button { font: inherit; font-size: 0.85rem; margin-left: 6px; cursor: pointer; }
+
+    summary:focus-visible, button:focus-visible { outline: 3px solid #f0a500; }
   </style>
 </head>
 <body>
 
   <h1>Research, Capstone & Teaching</h1>
 
+  <!-- ================= MY COURSES (status tracker) ================= -->
+  <details class="section" open>
+    <summary>My Courses</summary>
+    <div class="content">
+      <h3 class="status-title">Waiting for approval</h3>
+      <ul id="waiting-list"></ul>
+
+      <h3 class="status-title">Registered</h3>
+      <ul id="registered-list"></ul>
+    </div>
+  </details>
+
   <!-- ================= RESEARCH / CAPSTONE ================= -->
   <details class="section">
     <summary>Research / Capstone</summary>
     <div class="content">
-
-      <!-- Check the box next to a project if it counts toward your capstone graduation requirement. -->
+      <!-- Click a title to join the waiting list. Check the box if it counts toward your capstone. -->
       <!-- To add a major: copy one <details class="major"> block and edit it -->
+
       <details class="major">
         <summary>Cybersecurity</summary>
         <ul>
-          <li><span>Project title one</span> <label class="flag"><input type="checkbox"> For capstone graduation</label></li>
-          <li><span>Project title two</span> <label class="flag"><input type="checkbox"> For capstone graduation</label></li>
+          <li><button class="pick">Cybersecurity Project One</button> <label class="flag"><input type="checkbox"> For capstone graduation</label></li>
+          <li><button class="pick">Cybersecurity Project Two</button> <label class="flag"><input type="checkbox"> For capstone graduation</label></li>
         </ul>
       </details>
 
       <details class="major">
         <summary>Computer Science</summary>
         <ul>
-          <li><span>Project title one</span> <label class="flag"><input type="checkbox"> For capstone graduation</label></li>
-          <li><span>Project title two</span> <label class="flag"><input type="checkbox"> For capstone graduation</label></li>
+          <li><button class="pick">Computer Science Project One</button> <label class="flag"><input type="checkbox"> For capstone graduation</label></li>
+          <li><button class="pick">Computer Science Project Two</button> <label class="flag"><input type="checkbox"> For capstone graduation</label></li>
         </ul>
       </details>
 
       <details class="major">
         <summary>Information Technology</summary>
         <ul>
-          <li><span>Project title one</span> <label class="flag"><input type="checkbox"> For capstone graduation</label></li>
+          <li><button class="pick">IT Project One</button> <label class="flag"><input type="checkbox"> For capstone graduation</label></li>
         </ul>
       </details>
 
       <details class="major">
         <summary>Data Science</summary>
         <ul>
-          <li><span>Project title one</span> <label class="flag"><input type="checkbox"> For capstone graduation</label></li>
+          <li><button class="pick">Data Science Project One</button> <label class="flag"><input type="checkbox"> For capstone graduation</label></li>
         </ul>
       </details>
-
     </div>
   </details>
 
@@ -128,11 +155,74 @@
     <summary>Teaching Assistant</summary>
     <div class="content">
       <ul>
-        <li>Course name – Semester</li>
-        <li>Course name – Semester</li>
+        <li><button class="pick">TA: Course One (Fall)</button></li>
+        <li><button class="pick">TA: Course Two (Spring)</button></li>
       </ul>
     </div>
   </details>
+
+  <script>
+    // Each title is stored as: { "Title": "waiting" } or { "Title": "registered" }
+    let status = {};
+    try { status = JSON.parse(localStorage.getItem("courseStatus")) || {}; } catch (e) {}
+
+    function save() {
+      try { localStorage.setItem("courseStatus", JSON.stringify(status)); } catch (e) {}
+    }
+
+    // Build one row in the My Courses lists
+    function makeRow(title, state) {
+      const li = document.createElement("li");
+      const name = document.createElement("span");
+      name.textContent = title;
+      const actions = document.createElement("span");
+      actions.className = "actions";
+
+      if (state === "waiting") {
+        const approve = document.createElement("button");
+        approve.textContent = "Professor approved";
+        approve.onclick = () => { status[title] = "registered"; save(); render(); };
+        actions.appendChild(approve);
+      }
+      const remove = document.createElement("button");
+      remove.textContent = "Remove";
+      remove.onclick = () => { delete status[title]; save(); render(); };
+      actions.appendChild(remove);
+
+      li.append(name, actions);
+      return li;
+    }
+
+    function fillList(id, state) {
+      const list = document.getElementById(id);
+      list.innerHTML = "";
+      const titles = Object.keys(status).filter(t => status[t] === state);
+      if (titles.length === 0) {
+        list.innerHTML = '<li class="empty">Nothing here yet.</li>';
+      }
+      titles.forEach(t => list.appendChild(makeRow(t, state)));
+    }
+
+    function render() {
+      fillList("waiting-list", "waiting");
+      fillList("registered-list", "registered");
+      // Show status next to each clickable title
+      document.querySelectorAll(".pick").forEach(btn => {
+        const s = status[btn.textContent.trim()];
+        if (s) btn.dataset.status = s; else delete btn.dataset.status;
+      });
+    }
+
+    // Clicking a title puts it on the waiting list (if it isn't listed already)
+    document.querySelectorAll(".pick").forEach(btn => {
+      btn.onclick = () => {
+        const title = btn.textContent.trim();
+        if (!status[title]) { status[title] = "waiting"; save(); render(); }
+      };
+    });
+
+    render();
+  </script>
 
 </body>
 </html>
